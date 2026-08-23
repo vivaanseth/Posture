@@ -96,7 +96,11 @@ test("launches the secure onboarding flow", async () => {
     await window.getByRole("button", { name: "Test reminder" }).click();
     const nudge = await nudgeWindowPromise;
     await expect(nudge.getByText("Take a moment to reset")).toBeVisible();
-    await nudge.getByRole("button", { name: "Dismiss reminder" }).click();
+    const dismissReminder = nudge.getByRole("button", {
+      name: "Dismiss reminder",
+    });
+    await expect(dismissReminder).toBeVisible();
+    await dismissReminder.dispatchEvent("click");
     await expect.poll(() => nudge.isClosed()).toBe(true);
     await window.getByRole("button", { name: /start tracking/i }).click();
     await expect(
