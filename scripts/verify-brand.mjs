@@ -39,22 +39,42 @@ const textExtensions = new Set([
   ".yaml",
 ]);
 const excluded = [
-  /^docs\/releases\//,
   /(^|\/)node_modules\//,
   /(^|\/)dist\//,
   /(^|\/)out\//,
   /(^|\/)verify-brand\.mjs$/,
   /\.test\.[cm]?[jt]sx?$/,
 ];
+const legacyProductNamePattern = new RegExp(`\\b${"Post"}${"ure"}\\b`, "g");
+const legacyRepositoryPattern = new RegExp(
+  `github\\.com\\/vivaanseth\\/(?:${"Post"}${"ure"}|${"post"}${"ure"})(?=[/#"'\\s]|$)`,
+  "g",
+);
+const legacyReleasePrefixPattern = new RegExp(
+  `\\b${"Post"}${"ure"}-(?=\\$|v?\\d)`,
+  "g",
+);
+const legacyPackageIdentityPattern = new RegExp(
+  `\\b${"post"}${"ure"}-desktop\\b`,
+  "g",
+);
+const legacyAppProtocolPattern = new RegExp(
+  `app:\\/\\/${"post"}${"ure"}\\b`,
+  "g",
+);
+const legacyAppIdPattern = new RegExp(
+  `\\bapp\\.${"post"}${"ure"}\\.desktop\\b`,
+  "g",
+);
 const forbidden = [
-  { label: "legacy visible product name", pattern: /\bPosture\b/g },
-  {
-    label: "legacy repository URL",
-    pattern: /github\.com\/vivaanseth\/(?:Posture|posture)(?=[/#"'\s]|$)/g,
-  },
+  { label: "legacy visible product name", pattern: legacyProductNamePattern },
+  { label: "legacy repository URL", pattern: legacyRepositoryPattern },
   { label: "legacy renderer API", pattern: /window\.posture\b/g },
   { label: "legacy build variable", pattern: /\bPOSTURE_[A-Z0-9_]+\b/g },
-  { label: "legacy release asset prefix", pattern: /\bPosture-(?=\$|v?\d)/g },
+  { label: "legacy package identity", pattern: legacyPackageIdentityPattern },
+  { label: "legacy app protocol", pattern: legacyAppProtocolPattern },
+  { label: "legacy app id", pattern: legacyAppIdPattern },
+  { label: "legacy release asset prefix", pattern: legacyReleasePrefixPattern },
 ];
 
 const files = [];

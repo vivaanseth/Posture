@@ -4,16 +4,18 @@
 
 Upright bundles the following runtime components. This inventory is generated from the pinned production dependency graph and bundled model; CI fails if it becomes stale.
 
-| Component                      | Version | License    | Source                                                                   |
-| ------------------------------ | ------- | ---------- | ------------------------------------------------------------------------ |
-| @mediapipe/tasks-vision        | 0.10.35 | Apache-2.0 | pkg:npm/%40mediapipe/tasks-vision@0.10.35                                |
-| @phosphor-icons/react          | 2.1.10  | MIT        | pkg:npm/%40phosphor-icons/react@2.1.10                                   |
-| electron                       | 43.1.0  | MIT        | https://github.com/electron/electron                                     |
-| MediaPipe Pose Landmarker Lite | 0.10.35 | Apache-2.0 | https://developers.google.com/mediapipe/solutions/vision/pose_landmarker |
-| react-dom                      | 19.2.7  | MIT        | pkg:npm/react-dom@19.2.7                                                 |
-| react                          | 19.2.7  | MIT        | pkg:npm/react@19.2.7                                                     |
-| scheduler                      | 0.27.0  | MIT        | pkg:npm/scheduler@0.27.0                                                 |
-| zod                            | 4.4.3   | MIT        | pkg:npm/zod@4.4.3                                                        |
-| zustand                        | 5.0.14  | MIT        | pkg:npm/zustand@5.0.14                                                   |
+| Component                      | Version         | License    | Source                                                                   |
+| ------------------------------ | --------------- | ---------- | ------------------------------------------------------------------------ |
+| @mediapipe/tasks-vision        | 0.10.35         | Apache-2.0 | pkg:npm/%40mediapipe/tasks-vision@0.10.35                                |
+| @opencvjs/types                | 5.0.0-release.2 | Apache-2.0 | pkg:npm/%40opencvjs/types@5.0.0-release.2                                |
+| @opencvjs/worker               | 5.0.0-release.2 | Apache-2.0 | pkg:npm/%40opencvjs/worker@5.0.0-release.2                               |
+| @phosphor-icons/react          | 2.1.10          | MIT        | pkg:npm/%40phosphor-icons/react@2.1.10                                   |
+| electron                       | 43.1.0          | MIT        | https://github.com/electron/electron                                     |
+| MediaPipe Pose Landmarker Lite | 0.10.35         | Apache-2.0 | https://developers.google.com/mediapipe/solutions/vision/pose_landmarker |
+| react-dom                      | 19.2.7          | MIT        | pkg:npm/react-dom@19.2.7                                                 |
+| react                          | 19.2.7          | MIT        | pkg:npm/react@19.2.7                                                     |
+| scheduler                      | 0.27.0          | MIT        | pkg:npm/scheduler@0.27.0                                                 |
+| zod                            | 4.4.3           | MIT        | pkg:npm/zod@4.4.3                                                        |
+| zustand                        | 5.0.14          | MIT        | pkg:npm/zustand@5.0.14                                                   |
 
 Electron distributions also carry Chromium and other upstream notices inside the packaged runtime. MediaPipe camera processing remains local to Upright.

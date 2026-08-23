@@ -10,13 +10,13 @@ import {
 describe("renderer trust boundary", () => {
   it("accepts only the exact packaged application origin", () => {
     const packaged = { isPackaged: true };
-    expect(isTrustedRendererUrl("app://posture/index.html", packaged)).toBe(
+    expect(isTrustedRendererUrl("app://upright/index.html", packaged)).toBe(
       true,
     );
-    expect(isTrustedRendererUrl("app://postureevil/index.html", packaged)).toBe(
+    expect(isTrustedRendererUrl("app://uprightevil/index.html", packaged)).toBe(
       false,
     );
-    expect(isTrustedRendererUrl("https://posture/index.html", packaged)).toBe(
+    expect(isTrustedRendererUrl("https://upright/index.html", packaged)).toBe(
       false,
     );
   });
@@ -53,23 +53,23 @@ describe("renderer trust boundary", () => {
 describe("application protocol", () => {
   it("keeps resolved assets inside the renderer root", () => {
     const rendererRoot = resolve("/app/renderer");
-    expect(resolveRendererAsset(rendererRoot, "app://posture/")).toBe(
+    expect(resolveRendererAsset(rendererRoot, "app://upright/")).toBe(
       join(rendererRoot, "index.html"),
     );
     expect(
       resolveRendererAsset(
         rendererRoot,
-        "app://posture/assets/index.js?cache=1",
+        "app://upright/assets/index.js?cache=1",
       ),
     ).toBe(join(rendererRoot, "assets", "index.js"));
     expect(
-      resolveRendererAsset(rendererRoot, "app://posture/%2e%2e%2fsecret"),
+      resolveRendererAsset(rendererRoot, "app://upright/%2e%2e%2fsecret"),
     ).toBeNull();
     expect(
-      resolveRendererAsset(rendererRoot, "app://postureevil/index.html"),
+      resolveRendererAsset(rendererRoot, "app://uprightevil/index.html"),
     ).toBeNull();
     expect(
-      resolveRendererAsset(rendererRoot, "app://posture/%E0%A4%A"),
+      resolveRendererAsset(rendererRoot, "app://upright/%E0%A4%A"),
     ).toBeNull();
   });
 });

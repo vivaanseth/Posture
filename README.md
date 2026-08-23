@@ -109,9 +109,9 @@ The release workflow builds each operating system on a native GitHub runner. Sta
 - Windows x64: NSIS installer and portable ZIP
 - Linux x64: AppImage, DEB, RPM, and tar.gz
 
-### Upgrading from Posture 0.5.4 <!-- brand-audit: allow-history -->
+### Upgrading from Upright 0.5.4 <!-- brand-audit: allow-history -->
 
-Upright deliberately keeps the existing application ID, `posture-desktop` data directory, and Linux package identity. Existing settings, calibrations, sessions, camera permission state, and Chromium data therefore remain available. On macOS, quit Posture before installing Upright, then remove the old `Posture.app` file after confirming the migration; the two filenames can otherwise coexist. <!-- brand-audit: allow-history -->
+Upright deliberately keeps the existing application ID, `upright-desktop` data directory, and Linux package identity. Existing settings, calibrations, sessions, camera permission state, and Chromium data therefore remain available. On macOS, quit Upright before installing Upright, then remove the old `Upright.app` file after confirming the migration; the two filenames can otherwise coexist. <!-- brand-audit: allow-history -->
 
 If a camera does not appear during onboarding, follow the [camera troubleshooting guide](docs/troubleshooting-camera.md). Upright requests video only after the Privacy screen's Continue action and never requests microphone access.
 

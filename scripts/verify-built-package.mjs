@@ -60,7 +60,7 @@ async function inferExecutableFromAsar(asar) {
       entry.name.endsWith(".exe") ||
       entry.name === "Upright" ||
       entry.name === "upright" ||
-      entry.name === "posture-desktop"
+      entry.name === "upright-desktop"
     ) {
       return path.join(appRoot, entry.name);
     }

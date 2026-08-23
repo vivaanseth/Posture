@@ -75,24 +75,21 @@ describe("SessionAccumulator", () => {
 });
 
 describe("ReminderPolicy", () => {
-  it("waits through the first minute and sustained poor posture window", () => {
+  it("waits for the configured sustained poor-posture window", () => {
     const policy = new ReminderPolicy(0);
-    expect(policy.update(snapshot("poor", 50_000, 30), 30, 10)).toBe(false);
-    expect(policy.update(snapshot("poor", 61_000, 30), 30, 10)).toBe(false);
-    expect(policy.update(snapshot("poor", 91_001, 30), 30, 10)).toBe(true);
+    expect(policy.update(snapshot("poor", 0, 30), 30, 10)).toBe(false);
+    expect(policy.update(snapshot("poor", 29_999, 30), 30, 10)).toBe(false);
+    expect(policy.update(snapshot("poor", 30_001, 30), 30, 10)).toBe(true);
   });
 
-  it("uses one monotonic clock for startup suppression and reminder timing", () => {
+  it("uses one monotonic clock for reminder timing", () => {
     const mainStartedAt = 2_000_000;
-    const policy = new ReminderPolicy(mainStartedAt);
+    const policy = new ReminderPolicy();
+    expect(policy.update(snapshot("poor", mainStartedAt, 30), 30, 10)).toBe(
+      false,
+    );
     expect(
-      policy.update(snapshot("poor", mainStartedAt + 59_999, 30), 30, 10),
-    ).toBe(false);
-    expect(
-      policy.update(snapshot("poor", mainStartedAt + 60_000, 30), 30, 10),
-    ).toBe(false);
-    expect(
-      policy.update(snapshot("poor", mainStartedAt + 90_000, 30), 30, 10),
+      policy.update(snapshot("poor", mainStartedAt + 30_000, 30), 30, 10),
     ).toBe(true);
   });
 

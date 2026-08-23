@@ -858,16 +858,22 @@ export function useTrackingController() {
             requestedAccessStatus === "restricted" ? "restricted" : "denied",
           );
         const message =
-          error instanceof DOMException && error.name === "NotAllowedError"
-            ? "Camera access is off. Allow Upright in your system privacy settings, then try again."
-            : error instanceof DOMException && error.name === "NotReadableError"
-              ? "The camera is already in use by another application."
-              : error instanceof DOMException && error.name === "NotFoundError"
-                ? "No camera was found. Connect a camera and try again."
+          failureOverride === "worker-init-failed"
+            ? error instanceof Error
+              ? error.message
+              : "OpenCV or MediaPipe could not initialize."
+            : error instanceof DOMException && error.name === "NotAllowedError"
+              ? "Camera access is off. Allow Upright in your system privacy settings, then try again."
+              : error instanceof DOMException &&
+                  error.name === "NotReadableError"
+                ? "The camera is already in use by another application."
                 : error instanceof DOMException &&
-                    error.name === "InvalidStateError"
-                  ? error.message
-                  : "Upright could not open this camera. Check the connection and try again.";
+                    error.name === "NotFoundError"
+                  ? "No camera was found. Connect a camera and try again."
+                  : error instanceof DOMException &&
+                      error.name === "InvalidStateError"
+                    ? error.message
+                    : "Upright could not open this camera. Check the connection and try again.";
         const failureCode: CameraFailureCode =
           failureOverride ??
           (error instanceof DOMException && error.name === "NotAllowedError"

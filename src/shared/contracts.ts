@@ -199,7 +199,7 @@ export const defaultSettings: Settings = {
   sensitivity: "balanced",
   reminderDelaySeconds: 30,
   cooldownMinutes: 10,
-  soundEnabled: false,
+  soundEnabled: true,
   launchAtLogin: false,
   autoStartTracking: false,
   reduceOnBattery: true,
@@ -340,7 +340,7 @@ export type SessionRecord = z.infer<typeof sessionRecordSchema>;
 export const exportV2Schema = z.object({
   schemaVersion: z.literal(2),
   exportedAt: z.string().datetime(),
-  app: z.literal("Posture"),
+  app: z.literal("Upright"),
   settings: settingsSchema,
   calibrations: z.array(calibrationRecordSchema),
   sessions: z.array(sessionSummarySchema),

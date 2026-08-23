@@ -26,14 +26,15 @@ const launch = async (
 
 const openCameraStep = async (window: Page): Promise<void> => {
   await window.getByRole("button", { name: "Continue" }).click();
-  await window.getByRole("button", { name: "Continue" }).click();
   await expect(
-    window.getByRole("heading", { name: "Choose your camera." }),
+    window.getByRole("heading", {
+      name: /Camera stays local\.\s*Your posture stays yours\./,
+    }),
   ).toBeVisible();
 };
 
 test("launches the secure onboarding flow", async () => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   const userData = await mkdtemp(join(tmpdir(), "posture-e2e-"));
   const app = await launch(userData);
 
@@ -41,20 +42,20 @@ test("launches the secure onboarding flow", async () => {
     const window = await app.firstWindow();
     await expect(
       window.getByRole("heading", {
-        name: "A quieter way to notice your posture.",
+        name: /Notice the drift\.\s*Not every movement\./,
       }),
     ).toBeVisible();
-    await expect(window.getByText("Setup takes about a minute")).toBeVisible();
-    await window.getByRole("button", { name: "Continue" }).click();
     await expect(
-      window.getByRole("heading", { name: "Your camera stays yours." }),
-    ).toBeVisible();
-    await expect(
-      window.getByText(/never uploads, saves, or logs camera frames/i),
+      window.getByText(/does not react to every small movement/i),
     ).toBeVisible();
     await window.getByRole("button", { name: "Continue" }).click();
     await expect(
-      window.getByRole("heading", { name: "Choose your camera." }),
+      window.getByRole("heading", {
+        name: /Camera stays local\.\s*Your posture stays yours\./,
+      }),
+    ).toBeVisible();
+    await expect(
+      window.getByText(/no account, no cloud upload, and no saved video/i),
     ).toBeVisible();
     await expect(window.locator("video")).toBeVisible();
     await expect(window.locator("select option")).toHaveCount(2, {
@@ -65,12 +66,10 @@ test("launches the secure onboarding flow", async () => {
     ).toBeEnabled();
     await window.getByRole("button", { name: "Continue" }).click();
     await expect(
-      window.getByRole("heading", { name: "Find your baseline." }),
+      window.getByRole("heading", {
+        name: /Sit the way\s*you want to return to\./,
+      }),
     ).toBeVisible();
-    await expect(
-      window.getByRole("button", { name: "Start calibration" }),
-    ).toBeEnabled({ timeout: 15_000 });
-    await window.getByRole("button", { name: "Start calibration" }).click();
     try {
       await expect
         .poll(
@@ -91,7 +90,7 @@ test("launches the secure onboarding flow", async () => {
       throw error;
     }
     await expect(
-      window.getByRole("heading", { name: "You are ready." }),
+      window.getByRole("heading", { name: "Calibration complete" }),
     ).toBeVisible({ timeout: 20_000 });
     const nudgeWindowPromise = app.waitForEvent("window");
     await window.getByRole("button", { name: "Test reminder" }).click();
@@ -99,12 +98,39 @@ test("launches the secure onboarding flow", async () => {
     await expect(nudge.getByText("Take a moment to reset")).toBeVisible();
     await nudge.getByRole("button", { name: "Dismiss reminder" }).click();
     await expect.poll(() => nudge.isClosed()).toBe(true);
-    await window
-      .getByRole("button", { name: /start my first session/i })
-      .click();
+    await window.getByRole("button", { name: /start tracking/i }).click();
     await expect(
-      window.getByRole("heading", { name: "Stay comfortable, not perfect." }),
+      window.getByRole("heading", { name: "Good posture" }),
     ).toBeVisible();
+    for (let cycle = 0; cycle < 2; cycle += 1) {
+      await window.getByRole("button", { name: "Pause" }).click();
+      await expect(
+        window.getByRole("heading", { name: "Tracking paused" }),
+      ).toBeVisible();
+      await window.getByRole("button", { name: "Start" }).click();
+      await expect(
+        window.getByRole("heading", { name: "Good posture" }),
+      ).toBeVisible({ timeout: 30_000 });
+    }
+    await window.getByRole("button", { name: "History" }).click();
+    await expect(
+      window.getByRole("heading", {
+        name: /Your posture,\s*over time\./,
+      }),
+    ).toBeVisible();
+    await window.getByRole("button", { name: "Camera" }).click();
+    await expect(
+      window.getByRole("heading", { name: /Check your\s*framing\./ }),
+    ).toBeVisible();
+    await window.getByRole("button", { name: "Settings" }).click();
+    await expect(
+      window.getByRole("heading", { name: /Make Upright\s*fit your day\./ }),
+    ).toBeVisible();
+    await window.getByRole("button", { name: "Reset all local data" }).click();
+    await expect(
+      window.getByRole("dialog", { name: /reset all local data/i }),
+    ).toBeVisible();
+    await window.getByRole("button", { name: "Cancel" }).click();
     await expect(window.locator("body")).not.toContainText("undefined");
   } finally {
     await app.close();
@@ -124,7 +150,6 @@ test("loads the real bundled MediaPipe runtime with a fake camera", async () => 
       window.getByText("Camera and local posture model are ready."),
     ).toBeVisible({ timeout: 30_000 });
     await window.getByRole("button", { name: "Continue" }).click();
-    await window.getByRole("button", { name: "Start calibration" }).click();
     await expect
       .poll(
         async () =>
@@ -221,7 +246,7 @@ test("preserves legacy profile settings while presenting Upright branding", asyn
   try {
     const window = await app.firstWindow();
     await expect(
-      window.getByRole("heading", { name: "Stay comfortable, not perfect." }),
+      window.getByRole("heading", { name: "Tracking paused" }),
     ).toBeVisible();
     await expect(window.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(window).toHaveTitle("Upright");

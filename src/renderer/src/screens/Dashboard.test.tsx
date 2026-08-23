@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   SessionSummary,
   TrackingSnapshot,
@@ -36,12 +36,15 @@ const session: SessionSummary = {
 };
 
 describe("Dashboard", () => {
+  afterEach(() => vi.useRealTimers());
+
   it("shows tracking lifecycle separately and totals posture percentages to 100", () => {
     render(
       <Dashboard
         snapshot={snapshot}
         session={session}
         trackingMode="recovering"
+        reminderDelaySeconds={10}
         cameraError={null}
         cameraFailureCode={null}
         cameraId="camera-1"
@@ -52,9 +55,73 @@ describe("Dashboard", () => {
         onRecalibrate={vi.fn()}
       />,
     );
-    expect(screen.getByText("Camera: Recovering camera")).toBeVisible();
+    expect(screen.getByText("Reconnecting to your camera")).toBeVisible();
     expect(screen.getByText("34%")).toBeVisible();
     expect(screen.getAllByText("33%")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Pause" })).toBeEnabled();
+  });
+
+  it("follows real posture movement through drift, recovery, and return", async () => {
+    vi.useFakeTimers();
+    const props: React.ComponentProps<typeof Dashboard> = {
+      snapshot: { ...snapshot, state: "poor", score: 35, timestamp: 1_000 },
+      session,
+      trackingMode: "tracking",
+      reminderDelaySeconds: 10,
+      cameraError: null,
+      cameraFailureCode: null,
+      cameraId: "camera-1",
+      hasCalibration: true,
+      onToggle: vi.fn(),
+      onDiagnostics: vi.fn(),
+      onRetryCamera: vi.fn(),
+      onRecalibrate: vi.fn(),
+    };
+    const { rerender } = render(<Dashboard {...props} />);
+
+    expect(
+      screen.getByRole("heading", { name: "A little drift" }),
+    ).toBeVisible();
+
+    rerender(
+      <Dashboard
+        {...props}
+        snapshot={{ ...props.snapshot, timestamp: 11_000 }}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Time to reset" }),
+    ).toBeVisible();
+
+    rerender(
+      <Dashboard
+        {...props}
+        snapshot={{
+          ...props.snapshot,
+          state: "caution",
+          score: 68,
+          timestamp: 12_000,
+        }}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Almost there" })).toBeVisible();
+
+    rerender(
+      <Dashboard
+        {...props}
+        snapshot={{
+          ...props.snapshot,
+          state: "good",
+          score: 90,
+          timestamp: 13_000,
+        }}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Back in range" }),
+    ).toBeVisible();
+
+    await act(() => vi.advanceTimersByTime(2_400));
+    expect(screen.getByRole("heading", { name: "Good posture" })).toBeVisible();
   });
 });

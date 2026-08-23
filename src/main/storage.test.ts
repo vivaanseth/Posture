@@ -115,6 +115,7 @@ describe("LocalStore", () => {
     await expect(store.getSettings()).resolves.toMatchObject({
       theme: "system",
       onboardingComplete: false,
+      soundEnabled: true,
     });
     await expect(store.getCalibrations()).resolves.toEqual([]);
     await expect(store.getSessions()).resolves.toEqual([]);

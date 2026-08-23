@@ -6,8 +6,10 @@ import {
   type PoseWorkerRequest,
   type PoseWorkerResponse,
 } from "../../../shared/worker-protocol";
+import { OpenCvFrameProcessor } from "../runtime/opencv-frame-processor";
 
 let landmarker: PoseLandmarker | null = null;
+let frameProcessor: OpenCvFrameProcessor | null = null;
 let deterministicFixture = false;
 
 const fixtureLandmarks = (): Array<{
@@ -36,6 +38,13 @@ const send = (message: PoseWorkerResponse): void => self.postMessage(message);
 const messageFor = (error: unknown): string =>
   error instanceof Error ? error.message : "Pose tracking could not continue.";
 
+const disposePipeline = (): void => {
+  landmarker?.close();
+  landmarker = null;
+  frameProcessor?.dispose();
+  frameProcessor = null;
+};
+
 self.onmessage = async (event: MessageEvent<unknown>) => {
   let request: PoseWorkerRequest;
   try {
@@ -48,8 +57,14 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
     try {
       deterministicFixture =
         __UPRIGHT_E2E_FIXTURE__ && request.fixture === "deterministic";
-      landmarker?.close();
-      landmarker = null;
+      disposePipeline();
+      try {
+        frameProcessor = await OpenCvFrameProcessor.create();
+      } catch (error) {
+        throw new Error(
+          `OpenCV frame preprocessing could not initialize: ${messageFor(error)}`,
+        );
+      }
       if (deterministicFixture) {
         send({
           protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
@@ -81,8 +96,7 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
         type: "ready",
       });
     } catch (error) {
-      landmarker?.close();
-      landmarker = null;
+      disposePipeline();
       send({
         protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
         requestId: request.requestId,
@@ -94,8 +108,7 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
   }
 
   if (request.type === "dispose") {
-    landmarker?.close();
-    landmarker = null;
+    disposePipeline();
     send({
       protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
       requestId: request.requestId,
@@ -105,18 +118,16 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
   }
 
   try {
-    if (deterministicFixture) {
+    if (!frameProcessor) {
       send({
         protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
         requestId: request.requestId,
-        type: "result",
-        landmarks: fixtureLandmarks(),
-        timestamp: request.timestamp,
-        inferenceMs: 4,
+        type: "recoverable-error",
+        message: "OpenCV frame preprocessing is not ready.",
       });
       return;
     }
-    if (!landmarker) {
+    if (!deterministicFixture && !landmarker) {
       send({
         protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
         requestId: request.requestId,
@@ -125,8 +136,40 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
       });
       return;
     }
-    const started = performance.now();
-    const result = landmarker.detectForVideo(request.bitmap, request.timestamp);
+
+    const pipelineStarted = performance.now();
+    let processedFrame: OffscreenCanvas;
+    try {
+      processedFrame = frameProcessor.process(request.bitmap);
+    } catch (error) {
+      send({
+        protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
+        requestId: request.requestId,
+        type: "recoverable-error",
+        message: `OpenCV could not preprocess this camera frame: ${messageFor(error)}`,
+      });
+      return;
+    }
+
+    if (deterministicFixture) {
+      send({
+        protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
+        requestId: request.requestId,
+        type: "result",
+        landmarks: fixtureLandmarks(),
+        timestamp: request.timestamp,
+        inferenceMs: performance.now() - pipelineStarted,
+      });
+      return;
+    }
+    let result: ReturnType<PoseLandmarker["detectForVideo"]>;
+    try {
+      result = landmarker!.detectForVideo(processedFrame, request.timestamp);
+    } catch (error) {
+      throw new Error(
+        `MediaPipe could not process the preprocessed camera frame: ${messageFor(error)}`,
+      );
+    }
     send({
       protocolVersion: POSE_WORKER_PROTOCOL_VERSION,
       requestId: request.requestId,
@@ -139,7 +182,7 @@ self.onmessage = async (event: MessageEvent<unknown>) => {
           visibility: entry.visibility,
         })) ?? null,
       timestamp: request.timestamp,
-      inferenceMs: performance.now() - started,
+      inferenceMs: performance.now() - pipelineStarted,
     });
   } catch (error) {
     send({

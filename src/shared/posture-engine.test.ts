@@ -329,6 +329,20 @@ describe("classification", () => {
     ).toBe("caution");
   });
 
+  it("treats a fully forward hunch as poor even when other metrics remain stable", () => {
+    const classifier = new PostureClassifier();
+    const hunch = classifier.update(
+      { ...baseline, forwardHead: 0.42 },
+      calibration,
+      defaultSettings,
+      12,
+      5,
+      1_000,
+    );
+    expect(hunch.score).toBe(55);
+    expect(hunch.state).toBe("poor");
+  });
+
   it("emits a paused snapshot without carrying score state", () => {
     const paused = new PostureClassifier().paused(5_000);
     expect(paused).toMatchObject({
