@@ -1,5 +1,5 @@
 import {
-  ArrowClockwise,
+  ArrowRight,
   CheckCircle,
   Gauge,
   VideoCamera,
@@ -42,67 +42,84 @@ export function Diagnostics({
   onCalibrate: () => void;
   onCancelCalibration: () => void;
 }): React.JSX.Element {
+  const selectedCamera = devices.find(
+    (device) => device.deviceId === selectedCameraId,
+  );
+  const framingState = !stream
+    ? "Preview is off"
+    : snapshot.state === "away" || snapshot.state === "unknown"
+      ? "Adjust your framing"
+      : snapshot.confidence >= 0.65
+        ? "Framing looks good"
+        : "Checking framing";
+
   return (
-    <section className="screen" aria-labelledby="camera-title">
-      <header className="screen-header">
-        <div>
-          <span className="context-label">Camera and calibration</span>
-          <h1 id="camera-title" tabIndex={-1}>
-            Keep the signal reliable.
-          </h1>
-          <p>
-            The preview is visible only here and during setup. It is never
-            saved.
-          </p>
-        </div>
-      </header>
-      <div className="diagnostics-layout">
-        <CameraPreview stream={stream} />
-        <div className="diagnostics-controls">
-          <label className="field">
-            <span>Camera</span>
-            <select
-              aria-describedby={
-                error ? "camera-helper camera-error" : "camera-helper"
-              }
-              value={selectedCameraId ?? ""}
-              onChange={(event) => onSelectCamera(event.target.value)}
-            >
-              <option value="" disabled>
-                Select a camera
-              </option>
-              {devices.map((device) => (
-                <option key={device.deviceId} value={device.deviceId}>
-                  {device.label}
-                </option>
-              ))}
-            </select>
-            <small id="camera-helper">
-              Changing cameras requires a new calibration.
+    <section className="screen camera-screen" aria-labelledby="camera-title">
+      <div className="camera-copy">
+        <span className="context-label">Camera</span>
+        <h1 id="camera-title" tabIndex={-1}>
+          Check your
+          <br />
+          framing.
+        </h1>
+        <p>
+          Make sure your face and shoulders are visible before recalibrating.
+        </p>
+
+        <label className="camera-device-card">
+          <span className="status-dot" aria-hidden="true" />
+          <span>
+            <strong>{selectedCamera?.label ?? "Current camera"}</strong>
+            <small>
+              {stream ? "Preview active · local only" : "Preview off"}
             </small>
-          </label>
-          {!stream && (
-            <button className="button button-secondary" onClick={onOpenCamera}>
-              <VideoCamera size={18} /> Open preview
-            </button>
-          )}
-          <button
-            className="button button-primary"
-            disabled={!stream || calibrating || !workerReady}
-            onClick={onCalibrate}
+          </span>
+          <select
+            aria-label="Current camera"
+            value={selectedCameraId ?? ""}
+            onChange={(event) => onSelectCamera(event.target.value)}
           >
-            <ArrowClockwise size={18} weight="bold" />{" "}
-            {calibrating ? "Hold your position" : "Calibrate now"}
+            <option value="" disabled>
+              Select a camera
+            </option>
+            {devices.map((device) => (
+              <option key={device.deviceId} value={device.deviceId}>
+                {device.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {!stream && (
+          <button className="camera-action neutral" onClick={onOpenCamera}>
+            <span>
+              <strong>Open camera preview</strong>
+              <small>Video remains on this device.</small>
+            </span>
+            <VideoCamera size={18} aria-hidden="true" />
           </button>
-          {calibrating && (
-            <button
-              className="button button-secondary"
-              onClick={onCancelCalibration}
-            >
-              Cancel calibration
-            </button>
-          )}
-          {calibrating && (
+        )}
+
+        <button
+          className="camera-action"
+          disabled={!stream || calibrating || !workerReady}
+          onClick={onCalibrate}
+        >
+          <span>
+            <strong>
+              {calibrating ? "Recalibrating baseline" : "Recalibrate baseline"}
+            </strong>
+            <small>
+              {calibrating
+                ? `${progress}% complete · keep sitting naturally`
+                : "Sit naturally for about 10 seconds."}
+            </small>
+          </span>
+          <ArrowRight size={18} weight="bold" aria-hidden="true" />
+        </button>
+
+        {calibrating && (
+          <>
             <div
               className="calibration-progress"
               role="progressbar"
@@ -119,26 +136,38 @@ export function Diagnostics({
                 }
               />
             </div>
-          )}
-          {error && (
-            <p id="camera-error" className="inline-error" role="alert">
-              {error}
-            </p>
-          )}
-          {diagnosticsEnabled && (
+            <button className="text-button" onClick={onCancelCalibration}>
+              Cancel calibration
+            </button>
+          </>
+        )}
+
+        {error && (
+          <p id="camera-error" className="inline-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <p className="camera-privacy-note">
+          Nothing is uploaded or saved as video.
+        </p>
+
+        {diagnosticsEnabled ? (
+          <details className="advanced-diagnostics">
+            <summary>Advanced diagnostics</summary>
             <div className="diagnostic-readout">
               <div>
-                <Gauge size={18} />
+                <Gauge size={17} aria-hidden="true" />
                 <span>Model</span>
                 <strong>{workerReady ? "Ready" : "Loading"}</strong>
               </div>
               <div>
-                <CheckCircle size={18} />
+                <CheckCircle size={17} aria-hidden="true" />
                 <span>Landmark confidence</span>
                 <strong>{Math.round(snapshot.confidence * 100)}%</strong>
               </div>
               <div>
-                <VideoCamera size={18} />
+                <VideoCamera size={17} aria-hidden="true" />
                 <span>Inference</span>
                 <strong>
                   {snapshot.inferenceMs === null
@@ -147,21 +176,31 @@ export function Diagnostics({
                 </strong>
               </div>
               <div>
-                <Gauge size={18} />
+                <Gauge size={17} aria-hidden="true" />
                 <span>Sampling</span>
                 <strong>
                   {diagnostics.measuredFps.toFixed(1)} / {diagnostics.targetFps}{" "}
                   FPS
                 </strong>
               </div>
-              <div>
-                <ArrowClockwise size={18} />
-                <span>Worker restarts</span>
-                <strong>{diagnostics.workerRestarts}</strong>
-              </div>
             </div>
-          )}
-        </div>
+          </details>
+        ) : (
+          <p className="diagnostics-hidden-note">
+            Advanced diagnostics are hidden by default.
+          </p>
+        )}
+      </div>
+
+      <div className="camera-preview-panel">
+        <CameraPreview stream={stream} />
+        <span
+          className={`framing-status ${framingState === "Framing looks good" ? "ready" : "checking"}`}
+          role="status"
+        >
+          <i aria-hidden="true" />
+          {framingState}
+        </span>
       </div>
     </section>
   );

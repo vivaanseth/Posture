@@ -35,7 +35,6 @@ const renderOnboarding = (
 
 const advanceToCamera = (): void => {
   fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 };
 
 describe("Onboarding", () => {
@@ -64,6 +63,7 @@ describe("Onboarding", () => {
       devices: [{ deviceId: "camera-1", label: "Camera 1" }],
       selectedCameraId: "camera-1",
       progress: 42,
+      workerReady: true,
     });
     advanceToCamera();
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
@@ -80,6 +80,7 @@ describe("Onboarding", () => {
       selectedCameraId: "camera-1",
       calibrating: true,
       progress: 50,
+      workerReady: true,
     });
     advanceToCamera();
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));

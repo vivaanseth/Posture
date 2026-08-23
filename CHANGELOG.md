@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 - 2026-08-22
+
+- Implemented the finalized Upright v2 desktop redesign with the compact graphite navigation rail, warm content surfaces, redesigned Today, History, Camera, Settings, reset confirmation, and three-stage onboarding flows.
+- Added reusable v2 UI foundations for posture visualization, session traces, navigation tooltips, grouped settings, dialogs, and responsive desktop layouts.
+- Added OpenCV frame preprocessing before the existing MediaPipe pose detector while preserving MediaPipe landmark detection and Upright posture logic.
+- Improved posture alert behavior so sustained full hunching reaches the reset state and reminder sounds are enabled by default for fresh profiles.
+- Expanded unit and end-to-end coverage for onboarding, dashboard state, OpenCV preprocessing, reminder sounds, camera recovery, and repeated tracking lifecycle behavior.
+
 ## 0.6.0 - 2026-07-16
 
 - Renamed the public application and repository to Upright while preserving the existing application ID, Linux package identity, camera permission state, settings, calibrations, sessions, and Chromium data.

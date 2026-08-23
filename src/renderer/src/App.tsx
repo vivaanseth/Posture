@@ -151,6 +151,7 @@ export function App(): React.JSX.Element {
             snapshot={store.snapshot}
             session={store.session}
             trackingMode={store.trackingMode}
+            reminderDelaySeconds={store.settings.reminderDelaySeconds}
             cameraError={store.cameraError}
             cameraFailureCode={controller.cameraFailureCode}
             cameraId={store.settings.selectedCameraId}

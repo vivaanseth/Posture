@@ -199,7 +199,7 @@ export const defaultSettings: Settings = {
   sensitivity: "balanced",
   reminderDelaySeconds: 30,
   cooldownMinutes: 10,
-  soundEnabled: false,
+  soundEnabled: true,
   launchAtLogin: false,
   autoStartTracking: false,
   reduceOnBattery: true,

@@ -19,7 +19,7 @@ import {
 } from "electron";
 import { mkdirSync } from "node:fs";
 import { stat } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
 import {
@@ -444,7 +444,7 @@ async function startSession(calibrationId: string): Promise<void> {
   if (currentSession) await endSession();
   const now = performance.now();
   currentSession = new SessionAccumulator(calibrationId);
-  reminderPolicy = new ReminderPolicy(now);
+  reminderPolicy = new ReminderPolicy();
   lastSessionSaveAt = now;
 }
 
@@ -797,6 +797,16 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+const openCvWorkerContentSecurityPolicy = contentSecurityPolicy.replace(
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'",
+);
+
+const contentSecurityPolicyForAsset = (assetPath: string): string =>
+  /^pose\.worker-[A-Za-z0-9_-]+\.js$/.test(basename(assetPath))
+    ? openCvWorkerContentSecurityPolicy
+    : contentSecurityPolicy;
+
 function registerAppProtocol(): void {
   protocol.handle("app", async (request) => {
     const assetPath = resolveRendererAsset(RENDERER_ROOT, request.url);
@@ -811,7 +821,12 @@ function registerAppProtocol(): void {
     }
     const response = await net.fetch(pathToFileURL(assetPath).toString());
     const headers = new Headers(response.headers);
-    headers.set("Content-Security-Policy", contentSecurityPolicy);
+    // OpenCV's generated Embind bindings construct local call adapters at
+    // startup. Scope that permission to the hashed pose-worker asset only.
+    headers.set(
+      "Content-Security-Policy",
+      contentSecurityPolicyForAsset(assetPath),
+    );
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

@@ -98,10 +98,11 @@ export class ReminderPolicy {
   private lastReminderAt: number | null = null;
   private lastUpdatedAt: number | null = null;
   private lastState: PostureState | null = null;
-  private sessionStartedAt: number;
 
-  constructor(sessionStartedAt = Date.now()) {
-    this.sessionStartedAt = sessionStartedAt;
+  // Kept for compatibility with existing callers. Reminder timing is driven by
+  // the monotonic snapshot timestamps rather than a startup grace period.
+  constructor(_sessionStartedAt = Date.now()) {
+    void _sessionStartedAt;
   }
 
   update(
@@ -111,16 +112,10 @@ export class ReminderPolicy {
   ): boolean {
     const now = snapshot.timestamp;
     if (this.lastUpdatedAt !== null && this.lastState === "poor") {
-      const eligibleStart = Math.max(
-        this.lastUpdatedAt,
-        this.sessionStartedAt + 60_000,
-      );
-      this.accumulatedPoorMs += Math.max(0, now - eligibleStart);
+      this.accumulatedPoorMs += Math.max(0, now - this.lastUpdatedAt);
     }
     this.lastUpdatedAt = now;
     this.lastState = snapshot.state;
-
-    if (now - this.sessionStartedAt < 60_000) return false;
 
     if (snapshot.state === "good") {
       this.goodSince ??= now;

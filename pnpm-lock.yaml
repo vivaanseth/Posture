@@ -10,6 +10,9 @@ importers:
       "@mediapipe/tasks-vision":
         specifier: 0.10.35
         version: 0.10.35
+      "@opencvjs/worker":
+        specifier: 5.0.0-release.2
+        version: 5.0.0-release.2
       "@phosphor-icons/react":
         specifier: 2.1.10
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -1085,6 +1088,18 @@ packages:
         integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==,
       }
     engines: { node: ">= 20.19.0" }
+
+  "@opencvjs/types@5.0.0-release.2":
+    resolution:
+      {
+        integrity: sha512-f0ufjw6QDVKyR/I6gxc14V6xDnS/FD1cIwTrwUorPQDd8Rn1SBssUTo+OE92V2jg+eynDjGev8ud2pnLaUvVww==,
+      }
+
+  "@opencvjs/worker@5.0.0-release.2":
+    resolution:
+      {
+        integrity: sha512-HaNLZi1eDgIKNySOUuLygtyW1US7yJVVpqDtYKmInsenpBJmQTMSWkenEmW4KHdeGX+R7L2T04vL/J28jwHxog==,
+      }
 
   "@peculiar/asn1-schema@2.8.0":
     resolution:
@@ -5107,6 +5122,12 @@ snapshots:
   "@noble/hashes@1.4.0": {}
 
   "@noble/hashes@2.2.0": {}
+
+  "@opencvjs/types@5.0.0-release.2": {}
+
+  "@opencvjs/worker@5.0.0-release.2":
+    dependencies:
+      "@opencvjs/types": 5.0.0-release.2
 
   "@peculiar/asn1-schema@2.8.0":
     dependencies:

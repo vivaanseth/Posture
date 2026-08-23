@@ -39,6 +39,10 @@ export const SCORING_CONFIG: ScoringConfig = Object.freeze({
 });
 
 const REQUIRED_CONFIDENCE = SCORING_CONFIG.requiredConfidence;
+const POSTURE_STATE_SCORE = Object.freeze({
+  good: 75,
+  poor: 60,
+});
 
 export function isCalibrationCompatible(
   calibration: Calibration,
@@ -549,15 +553,17 @@ export class PostureClassifier {
 
   private classifyWithHysteresis(score: number): PostureState {
     const hysteresis = SCORING_CONFIG.hysteresisPoints;
-    if (this.state === "good" && score >= 75 - hysteresis) return "good";
-    if (this.state === "poor" && score < 50 + hysteresis) return "poor";
+    if (this.state === "good" && score >= POSTURE_STATE_SCORE.good - hysteresis)
+      return "good";
+    if (this.state === "poor" && score < POSTURE_STATE_SCORE.poor + hysteresis)
+      return "poor";
     if (this.state === "caution") {
-      if (score >= 75 + hysteresis) return "good";
-      if (score < 50 - hysteresis) return "poor";
+      if (score >= POSTURE_STATE_SCORE.good + hysteresis) return "good";
+      if (score < POSTURE_STATE_SCORE.poor - hysteresis) return "poor";
       return "caution";
     }
-    if (score >= 75) return "good";
-    if (score < 50) return "poor";
+    if (score >= POSTURE_STATE_SCORE.good) return "good";
+    if (score < POSTURE_STATE_SCORE.poor) return "poor";
     return "caution";
   }
 

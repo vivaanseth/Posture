@@ -1,14 +1,15 @@
 import {
-  Pulse,
   Camera,
   ClockCounterClockwise,
   Gear,
+  House,
+  LockKey,
   PersonSimple,
 } from "@phosphor-icons/react";
 import type { View } from "../store";
 
-const items: Array<{ view: View; label: string; icon: typeof Pulse }> = [
-  { view: "dashboard", label: "Today", icon: Pulse },
+const items: Array<{ view: View; label: string; icon: typeof House }> = [
+  { view: "dashboard", label: "Today", icon: House },
   { view: "history", label: "History", icon: ClockCounterClockwise },
   { view: "diagnostics", label: "Camera", icon: Camera },
   { view: "settings", label: "Settings", icon: Gear },
@@ -29,20 +30,22 @@ export function Sidebar({
   onChange: (view: View) => void;
 }): React.JSX.Element {
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <span className="brand-mark">
-          <PersonSimple size={22} weight="bold" />
+    <aside className="sidebar" aria-label="Upright">
+      <div className="brand" aria-label="Upright">
+        <span className="brand-mark" aria-hidden="true">
+          <PersonSimple size={21} weight="bold" />
         </span>
-        <span>Upright</span>
+        <span className="visually-hidden">Upright</span>
       </div>
-      <nav aria-label="Main navigation">
+      <nav className="sidebar-nav" aria-label="Main navigation">
         {items.map((item) => {
           const Icon = item.icon;
+          const isActive = view === item.view;
           return (
             <button
+              type="button"
               key={item.view}
-              className={`nav-item ${view === item.view ? "active" : ""}`}
+              className={`nav-item ${isActive ? "active" : ""}`}
               onClick={() => {
                 onChange(item.view);
                 window.requestAnimationFrame(() => {
@@ -54,34 +57,35 @@ export function Sidebar({
                   heading.focus();
                 });
               }}
-              aria-current={view === item.view ? "page" : undefined}
+              aria-current={isActive ? "page" : undefined}
               aria-label={item.label}
               data-tooltip={item.label}
             >
               <Icon
-                size={19}
-                weight={view === item.view ? "fill" : "regular"}
+                className="nav-item-icon"
+                size={20}
+                weight={isActive ? "fill" : "regular"}
+                aria-hidden="true"
               />
-              <span>{item.label}</span>
+              <span className="nav-tooltip" role="tooltip">
+                {item.label}
+              </span>
             </button>
           );
         })}
       </nav>
-      <div className="privacy-note">
-        <EyeLock />
-        <div>
+      <div
+        className="privacy-note"
+        tabIndex={0}
+        aria-label="Local by design. Camera processing stays on this computer."
+        data-tooltip="Local by design"
+      >
+        <LockKey size={18} weight="fill" aria-hidden="true" />
+        <span className="privacy-tooltip" role="tooltip">
           <strong>Local by design</strong>
-          <span>No image leaves this computer.</span>
-        </div>
+          <span>Camera processing stays on this computer.</span>
+        </span>
       </div>
     </aside>
-  );
-}
-
-function EyeLock(): React.JSX.Element {
-  return (
-    <span className="privacy-glyph" aria-hidden="true">
-      U
-    </span>
   );
 }
