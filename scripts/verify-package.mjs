@@ -8,10 +8,18 @@ if (!archivePath) {
 }
 
 await access(archivePath);
-const entries = listPackage(archivePath, { isPack: false }).map((entry) =>
-  entry.replaceAll("\\", "/"),
+const archiveEntries = listPackage(archivePath, { isPack: false });
+const entryByNormalizedPath = new Map(
+  archiveEntries.map((entry) => [entry.replaceAll("\\", "/"), entry]),
 );
+const entries = [...entryByNormalizedPath.keys()];
 const failures = [];
+
+const extractNormalizedFile = (normalizedPath) => {
+  const archiveEntry = entryByNormalizedPath.get(normalizedPath);
+  if (!archiveEntry) throw new Error(`"${normalizedPath}" was not found`);
+  return extractFile(archivePath, archiveEntry.replace(/^[/\\]/, ""));
+};
 
 const reject = (description, predicate) => {
   const matches = entries.filter(predicate);
@@ -61,7 +69,7 @@ for (const required of [
 }
 
 for (const preload of ["out/preload/index.js", "out/preload/nudge.js"]) {
-  const source = extractFile(archivePath, preload).toString("utf8");
+  const source = extractNormalizedFile(`/${preload}`).toString("utf8");
   const unsupportedRequires = [...source.matchAll(/require\(([^)]+)\)/g)]
     .map((match) => match[1])
     .filter((request) => request !== '"electron"' && request !== "'electron'");
@@ -75,7 +83,7 @@ const rendererScripts = entries.filter(
   (entry) => entry.startsWith("/out/renderer/assets/") && entry.endsWith(".js"),
 );
 for (const entry of rendererScripts) {
-  const source = extractFile(archivePath, entry.slice(1)).toString("utf8");
+  const source = extractNormalizedFile(entry).toString("utf8");
   if (!entry.includes("pose.worker") && source.includes("deterministic"))
     failures.push(
       `production renderer exposes a deterministic test switch: ${entry}`,
