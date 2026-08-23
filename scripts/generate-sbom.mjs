@@ -1,27 +1,60 @@
-import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import process from "node:process";
-import { promisify } from "node:util";
 
-const execFileAsync = promisify(execFile);
 const packageJson = JSON.parse(await readFile("package.json", "utf8"));
-await readFile("pnpm-lock.yaml", "utf8");
+const lockfile = await readFile("pnpm-lock.yaml", "utf8");
 
 const platform = process.argv[2] ?? process.platform;
 const output =
   process.argv[3] ??
   `dist/Upright-v${packageJson.version}-${platform}-sbom.cdx.json`;
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const { stdout } = await execFileAsync(
-  pnpm,
-  ["list", "--prod", "--json", "--depth", "Infinity"],
-  { maxBuffer: 16 * 1024 * 1024 },
-);
-const tree = JSON.parse(stdout)[0];
-if (!tree?.dependencies)
-  throw new Error("pnpm did not return a production dependency graph.");
+
+const parsePackageKey = (key) => {
+  const unquoted = key.replace(/^"|"$/g, "");
+  const versionStart = unquoted.startsWith("@")
+    ? unquoted.indexOf("@", unquoted.indexOf("/") + 1)
+    : unquoted.indexOf("@");
+  if (versionStart <= 0) return null;
+  const name = unquoted.slice(0, versionStart);
+  const version = unquoted.slice(versionStart + 1).split("(")[0];
+  return { name, version };
+};
+
+const snapshotDependencies = new Map();
+const snapshotStart = lockfile.indexOf("\nsnapshots:\n");
+if (snapshotStart < 0) throw new Error("pnpm lockfile has no snapshots.");
+
+let currentSnapshot = null;
+let inDependencies = false;
+for (const line of lockfile.slice(snapshotStart).split(/\r?\n/)) {
+  const packageMatch = line.match(/^ {2}(\S.+):$/);
+  if (packageMatch) {
+    const parsed = parsePackageKey(packageMatch[1]);
+    currentSnapshot = parsed ? `${parsed.name}@${parsed.version}` : null;
+    inDependencies = false;
+    if (currentSnapshot && !snapshotDependencies.has(currentSnapshot)) {
+      snapshotDependencies.set(currentSnapshot, new Map());
+    }
+    continue;
+  }
+  if (!currentSnapshot) continue;
+  if (line === "    dependencies:") {
+    inDependencies = true;
+    continue;
+  }
+  if (inDependencies) {
+    const dependencyMatch = line.match(/^ {6}(.+?): (.+)$/);
+    if (!dependencyMatch) {
+      if (!line.startsWith("      ")) inDependencies = false;
+      continue;
+    }
+    const name = dependencyMatch[1].replace(/^"|"$/g, "");
+    const version = dependencyMatch[2].replace(/^"|"$/g, "").split("(")[0];
+    snapshotDependencies.get(currentSnapshot).set(name, version);
+  }
+}
 
 const purl = (name, version) => {
   if (name.startsWith("@")) {
@@ -33,18 +66,29 @@ const purl = (name, version) => {
 
 const components = new Map();
 const relationships = new Map();
-const visit = async (name, node) => {
+const packageJsonPathCandidates = (name, version) => [
+  join("node_modules", name, "package.json"),
+  join(
+    "node_modules",
+    ".pnpm",
+    `${name.replace("/", "+")}@${version}`,
+    "node_modules",
+    name,
+    "package.json",
+  ),
+];
+
+const visit = async (name, version) => {
   if (name.startsWith("@types/")) return null;
-  if (!node?.version) throw new Error(`Missing locked version for ${name}.`);
-  const ref = purl(name, node.version);
+  if (!version) throw new Error(`Missing locked version for ${name}.`);
+  const ref = purl(name, version);
   if (!components.has(ref)) {
     let license = null;
-    if (node.path) {
+    for (const packageJsonPath of packageJsonPathCandidates(name, version)) {
       try {
-        const metadata = JSON.parse(
-          await readFile(join(node.path, "package.json"), "utf8"),
-        );
+        const metadata = JSON.parse(await readFile(packageJsonPath, "utf8"));
         if (typeof metadata.license === "string") license = metadata.license;
+        break;
       } catch {
         // The graph remains useful when a package omits readable metadata.
       }
@@ -53,15 +97,15 @@ const visit = async (name, node) => {
       type: "library",
       "bom-ref": ref,
       name,
-      version: node.version,
+      version,
       purl: ref,
       ...(license ? { licenses: [{ license: { id: license } }] } : {}),
     });
   }
-  const children = node.dependencies ?? {};
+  const children = snapshotDependencies.get(`${name}@${version}`) ?? new Map();
   const dependsOn = [];
-  for (const [childName, child] of Object.entries(children)) {
-    const childRef = await visit(childName, child);
+  for (const [childName, childVersion] of children) {
+    const childRef = await visit(childName, childVersion);
     if (childRef) dependsOn.push(childRef);
   }
   relationships.set(
@@ -73,8 +117,8 @@ const visit = async (name, node) => {
 
 const rootRef = purl(packageJson.name, packageJson.version);
 const rootDependencies = [];
-for (const [name, node] of Object.entries(tree.dependencies)) {
-  const dependency = await visit(name, node);
+for (const [name, version] of Object.entries(packageJson.dependencies ?? {})) {
+  const dependency = await visit(name, version);
   if (dependency) rootDependencies.push(dependency);
 }
 
@@ -155,9 +199,7 @@ const sbom = {
       { name: "upright:target-platform", value: platform },
       {
         name: "upright:pnpm-lock-sha256",
-        value: createHash("sha256")
-          .update(await readFile("pnpm-lock.yaml"))
-          .digest("hex"),
+        value: createHash("sha256").update(lockfile).digest("hex"),
       },
     ],
   },
