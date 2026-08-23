@@ -6,7 +6,7 @@ This file records the compatibility evidence required before Upright can be desc
 
 | Area                | Status  | Evidence                                                                                                                                                                |
 | ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| macOS Apple Silicon | Partial | Historical real-camera validation completed on 2026-07-12 under the Posture name; the Upright package still requires a clean rerun. <!-- brand-audit: allow-history --> |
+| macOS Apple Silicon | Partial | Historical real-camera validation completed on 2026-07-12 under the Upright name; the Upright package still requires a clean rerun. <!-- brand-audit: allow-history --> |
 | macOS Intel         | Partial | On 2026-07-18, the Upright 0.6.0 x64 package passed ASAR/fuse validation and a packaged smoke launch on macOS 14.7.7. Real-camera and installer checks remain pending.  |
 | Windows 10 x64      | Pending | Requires clean-machine camera onboarding, pause, quit, and uninstall test.                                                                                              |
 | Windows 11 x64      | Pending | Requires clean-machine camera onboarding, pause, quit, and uninstall test.                                                                                              |

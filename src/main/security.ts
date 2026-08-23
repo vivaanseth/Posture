@@ -13,7 +13,7 @@ export function isTrustedRendererUrl(
     const url = new URL(input);
     if (
       url.protocol === "app:" &&
-      url.hostname === "posture" &&
+      url.hostname === "upright" &&
       url.port === ""
     ) {
       return true;
@@ -42,7 +42,7 @@ export function resolveRendererAsset(
     const url = new URL(requestUrl);
     if (
       url.protocol !== "app:" ||
-      url.hostname !== "posture" ||
+      url.hostname !== "upright" ||
       url.port !== ""
     ) {
       return null;

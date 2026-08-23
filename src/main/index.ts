@@ -152,7 +152,7 @@ function handle<T>(
 function rendererUrl(hash = "", search = ""): string {
   if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL)
     return `${process.env.ELECTRON_RENDERER_URL}${search}${hash}`;
-  return `app://posture/index.html${search}${hash}`;
+  return `app://upright/index.html${search}${hash}`;
 }
 
 function createMainWindow(): BrowserWindow {
@@ -841,10 +841,10 @@ const hasUserDataOverride = process.argv.some(
     argument === "--user-data-dir" || argument.startsWith("--user-data-dir="),
 );
 if (!hasUserDataOverride) {
-  const legacyDataPath = join(app.getPath("appData"), "posture-desktop");
-  mkdirSync(legacyDataPath, { recursive: true });
-  app.setPath("userData", legacyDataPath);
-  app.setPath("sessionData", legacyDataPath);
+  const uprightDataPath = join(app.getPath("appData"), "upright-desktop");
+  mkdirSync(uprightDataPath, { recursive: true });
+  app.setPath("userData", uprightDataPath);
+  app.setPath("sessionData", uprightDataPath);
 }
 
 const singleInstance = app.requestSingleInstanceLock();

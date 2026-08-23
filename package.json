@@ -1,6 +1,6 @@
 {
   "name": "upright-desktop",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A private, local-only posture companion for macOS, Windows, and Linux.",
   "main": "out/main/index.js",
   "desktopName": "upright.desktop",
@@ -89,7 +89,7 @@
   },
   "packageManager": "pnpm@11.5.3",
   "build": {
-    "appId": "app.posture.desktop",
+    "appId": "app.upright.desktop",
     "productName": "Upright",
     "asar": true,
     "asarUnpack": [],
@@ -194,10 +194,10 @@
       ]
     },
     "deb": {
-      "packageName": "posture-desktop"
+      "packageName": "upright-desktop"
     },
     "rpm": {
-      "packageName": "posture-desktop"
+      "packageName": "upright-desktop"
     }
   }
 }

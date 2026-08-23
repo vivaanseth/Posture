@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0 - 2026-08-22
+
+- Renamed the remaining packaged application identity to Upright across the app ID, application protocol origin, Linux package name, local data directory, exports, packaging checks, release notes, and documentation.
+- Removed historical legacy-product-name references from repository documentation so Upright is the only product name presented by the project.
+
 ## 0.7.0 - 2026-08-22
 
 - Implemented the finalized Upright v2 desktop redesign with the compact graphite navigation rail, warm content surfaces, redesigned Today, History, Camera, Settings, reset confirmation, and three-stage onboarding flows.
@@ -35,7 +40,7 @@ All notable changes follow semantic versioning.
 ### Fixed
 
 - Preserve the `v0.5.2` runtime dependency audit/SBOM split while excluding already-bundled runtime `node_modules` from packaged ASAR files.
-- Add Linux desktop metadata so desktop environments can associate running Posture windows with the installed launcher.
+- Add Linux desktop metadata so desktop environments can associate running Upright windows with the installed launcher.
 
 ### Release note
 
